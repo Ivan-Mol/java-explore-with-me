@@ -24,12 +24,12 @@ import java.util.List;
 @RestController
 @Slf4j
 public class StatisticController {
+    private static final String PATTERN = "yyyy-MM-dd HH:mm:ss";
     private final StatisticService service;
-    private final String pattern = "yyyy-MM-dd HH:mm:ss";
 
     @GetMapping("/stats")
-    public List<EndpointHitDto> getEndpointHit(@RequestParam(name = "start") @DateTimeFormat(pattern = pattern) LocalDateTime start,
-                                               @RequestParam(name = "end") @DateTimeFormat(pattern = pattern) LocalDateTime end,
+    public List<EndpointHitDto> getEndpointHit(@RequestParam(name = "start") @DateTimeFormat(pattern = PATTERN) LocalDateTime start,
+                                               @RequestParam(name = "end") @DateTimeFormat(pattern = PATTERN) LocalDateTime end,
                                                @RequestParam(name = "uris", required = false, defaultValue = "") List<String> uris,
                                                @RequestParam(name = "unique", required = false, defaultValue = "false") Boolean unique) {
         log.info("GET: start {} end {} List<uris> {} unique {}", start, end, uris, unique);

@@ -50,7 +50,7 @@ public class StatisticClient {
                         .path("/stats")
                         .queryParam("start", startDate)
                         .queryParam("end", endDate)
-                        .queryParam("uris", uris)
+                        .queryParam("uris", String.join(",", uris))
                         .queryParam("unique", unique.toString())
                         .build())
                 .retrieve()
