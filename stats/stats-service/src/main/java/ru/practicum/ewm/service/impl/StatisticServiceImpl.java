@@ -26,9 +26,9 @@ public class StatisticServiceImpl implements StatisticService {
     @Override
     @Transactional
     public StatisticReturnDto createStatistic(StatisticDto statisticDto) {
-        Statistic statistic = StatisticMapper.StatisticDtoToStatistic(statisticDto);
+        Statistic statistic = StatisticMapper.statisticDtoToStatistic(statisticDto);
         log.info("POST statisticDto {}", statisticDto);
-        return StatisticMapper.StatisticToStatisticDto(repository.save(statistic));
+        return StatisticMapper.statisticToStatisticDto(repository.save(statistic));
     }
 
     @Override
@@ -40,26 +40,26 @@ public class StatisticServiceImpl implements StatisticService {
                 log.info("GET start {} end {} unique = false", start, end);
                 return repository.getAllStatistic(start, end)
                         .stream()
-                        .map(StatisticMapper::EndpointHitToEndpointHitDto)
+                        .map(StatisticMapper::endpointHitToEndpointHitDto)
                         .collect(Collectors.toList());
             }
             log.info("GET start {} end {} unique = true", start, end);
             return repository.getAllStatisticDist(start, end)
                     .stream()
-                    .map(StatisticMapper::EndpointHitToEndpointHitDto)
+                    .map(StatisticMapper::endpointHitToEndpointHitDto)
                     .collect(Collectors.toList());
         }
         if (!unique) {
             log.info("GET start {} end {} List<uris> {} unique = false", start, end, uris);
             return repository.getStatistic(start, end, uris)
                     .stream()
-                    .map(StatisticMapper::EndpointHitToEndpointHitDto)
+                    .map(StatisticMapper::endpointHitToEndpointHitDto)
                     .collect(Collectors.toList());
         }
         log.info("GET start {} end {} List<uris> {} unique = true", start, end, uris);
         return repository.getStatisticDistinct(start, end, uris)
                 .stream()
-                .map(StatisticMapper::EndpointHitToEndpointHitDto)
+                .map(StatisticMapper::endpointHitToEndpointHitDto)
                 .collect(Collectors.toList());
     }
 

@@ -6,7 +6,7 @@ import ru.practicum.ewm.dto.StatisticReturnDto;
 
 public class StatisticMapper {
 
-    public static Statistic StatisticDtoToStatistic(StatisticDto statisticDto) {
+    public static Statistic statisticDtoToStatistic(StatisticDto statisticDto) {
         Statistic statistic = new Statistic();
         statistic.setApp(statisticDto.getApp());
         statistic.setUri(statisticDto.getUri());
@@ -15,7 +15,7 @@ public class StatisticMapper {
         return statistic;
     }
 
-    public static StatisticReturnDto StatisticToStatisticDto(Statistic statistic) {
+    public static StatisticReturnDto statisticToStatisticDto(Statistic statistic) {
         StatisticReturnDto answerDTO = new StatisticReturnDto();
         answerDTO.setId(statistic.getId());
         answerDTO.setApp(statistic.getApp());
@@ -25,7 +25,7 @@ public class StatisticMapper {
         return answerDTO;
     }
 
-    public static EndpointHitDto EndpointHitToEndpointHitDto(EndpointHit endpointHit) {
+    public static EndpointHitDto endpointHitToEndpointHitDto(EndpointHit endpointHit) {
         EndpointHitDto endpointHitDto = new EndpointHitDto();
         endpointHitDto.setApp(endpointHit.getApp());
         endpointHitDto.setUri(endpointHit.getUri());
