@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Data
-public class StatisticDto {
+public class EndpointHit {
     Long id;
     @NotNull(message = "App is null")
     @NotEmpty(message = "App is empty")

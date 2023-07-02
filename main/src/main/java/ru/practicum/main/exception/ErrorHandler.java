@@ -9,6 +9,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.main.exception.exceptions.BadRequestException;
 import ru.practicum.main.exception.exceptions.ConflictException;
 import ru.practicum.main.exception.exceptions.NotFoundException;
 import ru.practicum.main.exception.exceptions.ValidationException;
@@ -18,10 +19,17 @@ import ru.practicum.main.exception.exceptions.ValidationException;
 @Slf4j
 public class ErrorHandler {
 
-    @ExceptionHandler
+    @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(ValidationException e) {
         log.error("Handled Validation Exception", e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequestException(BadRequestException e) {
+        log.error("Handled BadRequestException", e);
         return new ErrorResponse(e.getMessage());
     }
 

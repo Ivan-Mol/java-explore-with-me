@@ -1,22 +1,22 @@
 package ru.practicum.ewm.model;
 
-import ru.practicum.ewm.dto.EndpointHitDto;
-import ru.practicum.ewm.dto.StatisticDto;
-import ru.practicum.ewm.dto.StatisticReturnDto;
+import ru.practicum.ewm.dto.ViewStats;
+import ru.practicum.ewm.dto.EndpointHit;
+import ru.practicum.ewm.dto.EndpointHitReturnDto;
 
 public class StatisticMapper {
 
-    public static Statistic statisticDtoToStatistic(StatisticDto statisticDto) {
+    public static Statistic statisticDtoToStatistic(EndpointHit endpointHit) {
         Statistic statistic = new Statistic();
-        statistic.setApp(statisticDto.getApp());
-        statistic.setUri(statisticDto.getUri());
-        statistic.setIp(statisticDto.getIp());
-        statistic.setTimestamp(statisticDto.getTimestamp());
+        statistic.setApp(endpointHit.getApp());
+        statistic.setUri(endpointHit.getUri());
+        statistic.setIp(endpointHit.getIp());
+        statistic.setTimestamp(endpointHit.getTimestamp());
         return statistic;
     }
 
-    public static StatisticReturnDto statisticToStatisticDto(Statistic statistic) {
-        StatisticReturnDto answerDTO = new StatisticReturnDto();
+    public static EndpointHitReturnDto statisticToStatisticDto(Statistic statistic) {
+        EndpointHitReturnDto answerDTO = new EndpointHitReturnDto();
         answerDTO.setId(statistic.getId());
         answerDTO.setApp(statistic.getApp());
         answerDTO.setUri(statistic.getUri());
@@ -25,11 +25,11 @@ public class StatisticMapper {
         return answerDTO;
     }
 
-    public static EndpointHitDto endpointHitToEndpointHitDto(EndpointHit endpointHit) {
-        EndpointHitDto endpointHitDto = new EndpointHitDto();
-        endpointHitDto.setApp(endpointHit.getApp());
-        endpointHitDto.setUri(endpointHit.getUri());
-        endpointHitDto.setHits(endpointHit.getHits());
-        return endpointHitDto;
+    public static ViewStats endpointHitToEndpointHitDto(ru.practicum.ewm.model.EndpointHit endpointHit) {
+        ViewStats viewStats = new ViewStats();
+        viewStats.setApp(endpointHit.getApp());
+        viewStats.setUri(endpointHit.getUri());
+        viewStats.setHits(endpointHit.getHits());
+        return viewStats;
     }
 }

@@ -37,10 +37,10 @@ public class AdminEventController {
             @RequestParam(required = false) List<Long> categories,
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam @Nullable LocalDateTime rangeStart,
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam @Nullable LocalDateTime rangeEnd,
-            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") Integer from,
-            @Positive @RequestParam(defaultValue = "10") Integer size
+            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") int from,
+            @Positive @RequestParam(required = false, defaultValue = "10") int size
     ) {
-        log.info("Get events users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size{}",
+        log.info("Get events users={}, states={}, categories={}, rangeStart={}, rangeEnd={}, from={}, size={}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
         return eventService.getEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }

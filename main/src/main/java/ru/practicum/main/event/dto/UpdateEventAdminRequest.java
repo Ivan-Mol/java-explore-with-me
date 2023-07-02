@@ -23,7 +23,7 @@ public class UpdateEventAdminRequest extends UpdateEventUserRequest {
     private LocationDto location;
     private Boolean paid;
     @PositiveOrZero
-    private Integer participantLimit;
+    private Long participantLimit;
     private Boolean requestModeration;
     private String stateAction;
     @Length(min = 3, max = 120)

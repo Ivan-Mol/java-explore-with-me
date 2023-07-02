@@ -27,6 +27,6 @@ public class EventFullDto {
     LocalDateTime publishedOn;
     Boolean paid;
     Boolean requestModeration;
-    Integer participantLimit;
-    Integer views;
+    Long participantLimit;
+    Long views;
 }

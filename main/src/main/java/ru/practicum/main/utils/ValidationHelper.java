@@ -39,8 +39,8 @@ public class ValidationHelper {
     }
 
     public void isParticipantLimitFull(Event event) {
-        if (event.getParticipantLimit() != 0 && event.getConfirmedRequests() >= event.getParticipantLimit()) {
-            throw new ConflictException("Participation limit is full. Event id=" + event.getId());
+        if (event.getParticipantLimit().equals(event.getConfirmedRequests()) && event.getParticipantLimit() > 0) {
+            throw new ConflictException("Participant limit is Full");
         }
     }
 
@@ -84,9 +84,15 @@ public class ValidationHelper {
         }
     }
 
-    public void isEventAvailableForRequest(Event event) {
+    public void isEventAvailable(Event event) {
         if (!event.getState().equals(EventState.PUBLISHED)) {
             throw new ConflictException("Event is not published");
+        }
+    }
+
+    public void isRequestAuthorInitiator(Event event, User user) {
+        if (event.getInitiator().equals(user)) {
+            throw new ConflictException("Initiator is a author of request");
         }
     }
 
@@ -105,7 +111,7 @@ public class ValidationHelper {
     }
 
     public void isTitleToLong(String title) {
-        if (title != null && title.length()>50) {
+        if (title != null && title.length() > 50) {
             throw new ValidationException("Title is longer than 50");
         }
     }

@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import ru.practicum.ewm.client.StatisticClient;
 import ru.practicum.main.category.model.Category;
 import ru.practicum.main.category.storage.CategoryRepository;
 import ru.practicum.main.event.dto.EventFullDto;
@@ -16,6 +18,7 @@ import ru.practicum.main.event.dto.UpdateEventUserRequest;
 import ru.practicum.main.event.model.Event;
 import ru.practicum.main.event.model.EventState;
 import ru.practicum.main.event.storage.EventRepository;
+import ru.practicum.main.exception.exceptions.BadRequestException;
 import ru.practicum.main.request.dto.RequestDto;
 import ru.practicum.main.request.dto.RequestMapper;
 import ru.practicum.main.request.storage.RequestRepository;
@@ -39,6 +42,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
     private final ValidationHelper validationHelper;
+    private final StatisticClient statisticClient;
 
     private static void updateEventStatusByUser(UpdateEventUserRequest eventUserRequest, Event event) {
         if (eventUserRequest.getStateAction() != null) {
@@ -83,7 +87,7 @@ public class EventServiceImpl implements EventService {
             event.setPaid(false);
         }
         if (newEventRequest.getParticipantLimit() == null) {
-            event.setParticipantLimit(0);
+            event.setParticipantLimit(0L);
         }
         if (newEventRequest.getRequestModeration() == null) {
             event.setRequestModeration(true);
@@ -120,8 +124,6 @@ public class EventServiceImpl implements EventService {
         validationHelper.isEventPublished(event);
         updateEventStatusByUser(updateEventDto, event);
         updateEventParams(updateEventDto, event);
-        //TODO
-        //Просмотры
         return EventMapper.toEventFullDto((eventRepository.save(event)));
     }
 
@@ -146,21 +148,47 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventShortDto> getEventsPublic(
-            String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd,
-            Boolean onlyAvailable, String sort, Integer from, Integer size, HttpServletRequest request
-    ) {
-        //TODO send statistic
-        return eventRepository.getEventsPublic(text, categories, paid, rangeStart, rangeEnd,
-                EventState.PUBLISHED, PageRequest.of(from / size, size)).stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
+    public List<EventShortDto> getEventsPublic(String text,
+                                               List<Long> categories,
+                                               Boolean paid,
+                                               LocalDateTime rangeStart,
+                                               LocalDateTime rangeEnd,
+                                               Boolean onlyAvailable,
+                                               String sort,
+                                               Integer from,
+                                               Integer size,
+                                               HttpServletRequest request) {
+        if (rangeStart == null) {
+            rangeStart = LocalDateTime.now().minusYears(200);
+        }
+        if (rangeEnd == null) {
+            rangeEnd = LocalDateTime.now().plusYears(200);
+        }
+        if (rangeStart.isAfter(rangeEnd)) {
+            throw new BadRequestException("Start is before end");
+        }
+        String sorting;
+        if (sort.equals("EVENT_DATE")) {
+            sorting = "eventDate";
+        } else if (sort.equals("VIEWS")) {
+            sorting = "views";
+        } else {
+            sorting = "id";
+        }
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(sorting));
+        List<Event> sortedEvents = eventRepository.getEvents(text, categories, paid, rangeStart, rangeEnd, pageable);
+        if (onlyAvailable) {
+            sortedEvents.removeIf(event -> event.getParticipantLimit().equals(event.getConfirmedRequests()));
+        }
+        return eventRepository.saveAll(sortedEvents).stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 
     @Override
     public EventFullDto getEventPublic(Long eventId, HttpServletRequest request) {
-        sendStatistic(request);
         Event event = eventRepository.getByIdAndCheck(eventId);
         validationHelper.isEventNotPublished(event);
-        return EventMapper.toEventFullDto(eventRepository.getByIdAndCheck(eventId));
+
+        return EventMapper.toEventFullDto(event);
     }
 
     @Override
@@ -192,10 +220,5 @@ public class EventServiceImpl implements EventService {
         Optional.ofNullable(updateEventDto.getParticipantLimit()).ifPresent(event::setParticipantLimit);
         Optional.ofNullable(updateEventDto.getRequestModeration()).ifPresent(event::setRequestModeration);
         Optional.ofNullable(updateEventDto.getTitle()).ifPresent(event::setTitle);
-    }
-
-    //TODO
-    private void sendStatistic(HttpServletRequest request) {
-
     }
 }

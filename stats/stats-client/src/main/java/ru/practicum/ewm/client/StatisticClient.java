@@ -1,29 +1,30 @@
 package ru.practicum.ewm.client;
 
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import ru.practicum.ewm.dto.EndpointHitDto;
-import ru.practicum.ewm.dto.StatisticDto;
-import ru.practicum.ewm.dto.StatisticReturnDto;
-
+import ru.practicum.ewm.dto.EndpointHit;
+import ru.practicum.ewm.dto.EndpointHitReturnDto;
+import ru.practicum.ewm.dto.ViewStats;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
-@Service
+@Component
+@Slf4j
 public class StatisticClient {
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final WebClient client;
     @Value("${client.url:http://localhost:9090}")
     private String url;
-
-
     public StatisticClient() {
         this.client = WebClient.builder()
                 .baseUrl(url)
@@ -31,17 +32,17 @@ public class StatisticClient {
                 .build();
     }
 
-    public StatisticReturnDto createStatistic(StatisticDto statisticDto) {
+    public EndpointHitReturnDto createStatistic(EndpointHit endpointHit) {
         return client
                 .post()
                 .uri("/hit")
-                .body(statisticDto, StatisticDto.class)
+                .body(endpointHit, EndpointHit.class)
                 .retrieve()
-                .bodyToMono(StatisticReturnDto.class)
+                .bodyToMono(EndpointHitReturnDto.class)
                 .block();
     }
 
-    public ResponseEntity<List<EndpointHitDto>> getStatistic(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public ResponseEntity<List<ViewStats>> getStatistic(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         String startDate = start.format(timeFormatter);
         String endDate = end.format(timeFormatter);
         return client
@@ -54,7 +55,7 @@ public class StatisticClient {
                         .queryParam("unique", unique.toString())
                         .build())
                 .retrieve()
-                .toEntityList(EndpointHitDto.class)
+                .toEntityList(ViewStats.class)
                 .block();
     }
 }

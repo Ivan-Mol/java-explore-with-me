@@ -2,7 +2,6 @@ package ru.practicum.main.request.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.main.event.dto.NewRequestUpdateDto;
 import ru.practicum.main.event.dto.RequestUpdateResponseDto;
@@ -18,6 +17,7 @@ import ru.practicum.main.user.model.User;
 import ru.practicum.main.user.storage.UserRepository;
 import ru.practicum.main.utils.ValidationHelper;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,35 +25,49 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final ValidationHelper validationHelper;
 
+
     @Override
+    @Transactional
     public RequestDto createRequest(Long userId, Long eventId) {
         User requester = userRepository.getByIdAndCheck(userId);
         Event event = eventRepository.getByIdAndCheck(eventId);
-        validationHelper.isEventAvailableForRequest(event);
-        validationHelper.isUserOwnerOfEvent(requester, event);
-        validationHelper.isParticipantLimitFull(event);
         validationHelper.isRequestAlreadyCreated(userId, eventId);
+        validationHelper.isEventAvailable(event);
+        validationHelper.isRequestAuthorInitiator(event, requester);
+        validationHelper.isParticipantLimitFull(event);
 
         Request request = new Request();
         request.setRequester(requester);
         request.setEvent(event);
         request.setCreated(LocalDateTime.now());
-        request.setStatus(event.getParticipantLimit() == 0 ? RequestStatus.CONFIRMED : RequestStatus.PENDING);
-        try {
-            request = requestRepository.save(request);
-        } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("Request is duplicate");
+        request.setStatus(RequestStatus.PENDING);
+
+        if (!event.getRequestModeration()) {
+            request.setStatus(RequestStatus.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         }
-        return RequestMapper.toRequestDto(request);
+        if (event.getParticipantLimit() == 0 && !event.getRequestModeration()) {
+            request.setStatus(RequestStatus.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        }
+        if (event.getRequestModeration() && event.getParticipantLimit() == 0) {
+            request.setStatus(RequestStatus.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        }
+        eventRepository.save(event);
+        return RequestMapper.toRequestDto(requestRepository.save(request));
     }
 
+
     @Override
+    @Transactional
     public List<RequestDto> getRequestsByUser(Long userId) {
         userRepository.getByIdAndCheck(userId);
         return requestRepository.getAllByRequesterId(userId)
@@ -63,16 +77,16 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
+    @Transactional
     public RequestUpdateResponseDto updateRequestStatus(Long userId, Long eventId, NewRequestUpdateDto newRequestUpdateDto) {
         User user = userRepository.getByIdAndCheck(userId);
         Event event = eventRepository.getByIdAndCheck(eventId);
-        validationHelper.isParticipantLimitFull(event);
         validationHelper.isUserNotOwnerOfEvent(user, event);
-
         RequestUpdateResponseDto responseDto = new RequestUpdateResponseDto();
         List<Request> requestsFromStorage = requestRepository.getAllByIdIn(newRequestUpdateDto.getRequestIds());
+
         for (Request request : requestsFromStorage) {
-            if (event.getParticipantLimit().equals(0) || !event.getRequestModeration()) {
+            if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
                 break;
             }
             validationHelper.isRequestAlreadyConfirmed(newRequestUpdateDto, request);
@@ -83,20 +97,25 @@ public class RequestServiceImpl implements RequestService {
                     responseDto.getRejectedRequests().add((RequestMapper.toRequestDto(request)));
                     break;
                 case CONFIRMED:
-                    if (event.getParticipantLimit() == 0 || event.getParticipantLimit() > event.getConfirmedRequests()) {
+                    if (event.getParticipantLimit() == 0 || event.getConfirmedRequests() < event.getParticipantLimit()) {
                         request.setStatus(RequestStatus.CONFIRMED);
                         responseDto.getConfirmedRequests().add(RequestMapper.toRequestDto(request));
+                        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
                     } else {
                         request.setStatus(RequestStatus.REJECTED);
                         responseDto.getRejectedRequests().add(RequestMapper.toRequestDto(request));
+                        requestRepository.save(request);
+                        throw new ConflictException("Participant limit is full UPDATE REQUEST");
                     }
             }
         }
+        eventRepository.save(event);
         requestRepository.saveAll(requestsFromStorage);
         return responseDto;
     }
 
     @Override
+    @Transactional
     public RequestDto cancelRequest(Long userId, Long requestId) {
         Request request = requestRepository.getByIdAndCheck(requestId);
         User user = userRepository.getByIdAndCheck(userId);

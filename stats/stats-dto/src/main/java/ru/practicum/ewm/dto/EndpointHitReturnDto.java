@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class StatisticReturnDto {
+public class EndpointHitReturnDto {
     private Long id;
     private String app;
     private String uri;

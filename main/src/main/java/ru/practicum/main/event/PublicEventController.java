@@ -28,16 +28,15 @@ public class PublicEventController {
     @GetMapping
     public List<EventShortDto> getEventsPublic(@RequestParam(required = false) String text,
                                                @RequestParam(required = false) List<Long> categories,
-                                               @RequestParam(defaultValue = "false") Boolean paid,
+                                               @RequestParam(required = false) Boolean paid,
                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime rangeStart,
                                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) LocalDateTime rangeEnd,
                                                @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                                               @RequestParam(name = "sort", defaultValue = "EVENT_DATE") String sort,
+                                               @RequestParam(name = "sort", defaultValue = "") String sort,
                                                @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
                                                @Positive @RequestParam(name = "size", defaultValue = "10") Integer size,
                                                HttpServletRequest request) {
-        return eventService.getEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable,
-                sort, from, size, request);
+        return eventService.getEventsPublic(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size, request);
     }
 
     @GetMapping("/{eventId}")

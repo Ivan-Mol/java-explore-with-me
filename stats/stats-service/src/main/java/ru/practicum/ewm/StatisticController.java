@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.ewm.dto.EndpointHitDto;
-import ru.practicum.ewm.dto.StatisticDto;
-import ru.practicum.ewm.dto.StatisticReturnDto;
+import ru.practicum.ewm.dto.ViewStats;
+import ru.practicum.ewm.dto.EndpointHit;
+import ru.practicum.ewm.dto.EndpointHitReturnDto;
 import ru.practicum.ewm.service.StatisticService;
 
 import javax.validation.Valid;
@@ -28,18 +28,18 @@ public class StatisticController {
     private final StatisticService service;
 
     @GetMapping("/stats")
-    public List<EndpointHitDto> getEndpointHit(@RequestParam(name = "start") @DateTimeFormat(pattern = PATTERN) LocalDateTime start,
-                                               @RequestParam(name = "end") @DateTimeFormat(pattern = PATTERN) LocalDateTime end,
-                                               @RequestParam(name = "uris", required = false, defaultValue = "") List<String> uris,
-                                               @RequestParam(name = "unique", required = false, defaultValue = "false") Boolean unique) {
+    public List<ViewStats> getEndpointHit(@RequestParam(name = "start") @DateTimeFormat(pattern = PATTERN) LocalDateTime start,
+                                          @RequestParam(name = "end") @DateTimeFormat(pattern = PATTERN) LocalDateTime end,
+                                          @RequestParam(name = "uris", required = false, defaultValue = "") List<String> uris,
+                                          @RequestParam(name = "unique", required = false, defaultValue = "false") Boolean unique) {
         log.info("GET: start {} end {} List<uris> {} unique {}", start, end, uris, unique);
         return service.getAllStatistic(start, end, uris, unique);
     }
 
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
-    public StatisticReturnDto createStatistic(@RequestBody @Valid StatisticDto statisticDto) {
-        log.info("POST: statisticDto {}", statisticDto);
-        return service.createStatistic(statisticDto);
+    public EndpointHitReturnDto createStatistic(@RequestBody @Valid EndpointHit endpointHit) {
+        log.info("POST: statisticDto {}", endpointHit);
+        return service.createStatistic(endpointHit);
     }
 }

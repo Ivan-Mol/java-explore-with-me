@@ -3,7 +3,6 @@ package ru.practicum.main.event.storage;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 import ru.practicum.main.event.model.Event;
 import ru.practicum.main.event.model.EventState;
@@ -22,32 +21,26 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     List<Event> getFirstByCategoryId(Long categoryId);
 
-    @Query("select e from Event e " +
-            "where e.initiator.id in :ids " +
-            "and e.state in :states " +
-            "and e.category.id in :categoriesIds " +
-            "and e.eventDate between :eventDateStart and :eventDateEnd " +
-            "order by e.id ASC")
-    List<Event> getAllEventsByAdminByJpaBuddy(@Nullable List<Long> ids, @Nullable List<EventState> states, @Nullable List<Long> categoriesIds, @Nullable LocalDateTime eventDateStart, @Nullable LocalDateTime eventDateEnd, Pageable pageable);
-
     @Query("SELECT e FROM Event AS e " +
-            "WHERE e.state = :state " +
-            "AND (:text IS NULL " +
-            "OR UPPER(e.description) LIKE UPPER(CONCAT('%', :text, '%')) " +
-            "OR UPPER(e.annotation) LIKE UPPER(CONCAT('%', :text, '%'))) " +
+            "where (:ids IS NULL OR e.initiator.id in :ids) " +
+            "and (:states IS NULL OR e.state in :states) " +
+            "and (:categoriesIds IS NULL OR e.category.id in :categoriesIds) " +
+            "and (CAST(:eventDateStart AS timestamp) IS NULL OR e.eventDate >= :eventDateStart) " +
+            "and (CAST(:eventDateEnd AS timestamp) IS NULL OR e.eventDate <= :eventDateEnd) " +
+            "order by e.id ASC")
+    List<Event> getAllEventsByAdminByJpaBuddy(List<Long> ids,
+                                              List<EventState> states,
+                                              List<Long> categoriesIds,
+                                              LocalDateTime eventDateStart,
+                                              LocalDateTime eventDateEnd,
+                                              Pageable pageable);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE (UPPER(e.annotation) LIKE UPPER(CONCAT('%',:text,'%')) " +
+            "OR UPPER(e.description) LIKE UPPER(CONCAT('%',:text,'%')) OR :text IS NULL) " +
             "AND (:categories IS NULL OR e.category.id IN (:categories)) " +
             "AND (:paid IS NULL OR e.paid = :paid) " +
-            "AND ((coalesce(:rangeStart, :rangeEnd) IS NULL " +
-            "AND e.eventDate > now()) " +
-            "OR e.eventDate BETWEEN coalesce(:rangeStart, e.eventDate) " +
-            "AND coalesce(:rangeEnd, e.eventDate))")
-    List<Event> getEventsPublic(String text,
-                                List<Long> categories,
-                                Boolean paid,
-                                LocalDateTime rangeStart,
-                                LocalDateTime rangeEnd,
-                                EventState state,
-                                Pageable pageable);
-
-    List<Event> getAllByIdIn(List<Long> ids);
+            "and (CAST(:rangeStart AS timestamp) IS NULL OR e.eventDate >= :rangeStart) " +
+            "and (CAST(:rangeEnd AS timestamp) IS NULL OR e.eventDate <= :rangeEnd)")
+    List<Event> getEvents(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable pageable);
 }

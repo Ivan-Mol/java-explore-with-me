@@ -27,6 +27,6 @@ public class NewEventRequest {
     @NotNull
     Long category;
     Boolean paid;
-    Integer participantLimit;
+    Long participantLimit;
     Boolean requestModeration;
 }
