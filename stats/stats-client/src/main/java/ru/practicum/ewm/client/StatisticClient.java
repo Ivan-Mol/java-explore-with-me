@@ -1,7 +1,6 @@
 package ru.practicum.ewm.client;
 
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -9,10 +8,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import ru.practicum.ewm.dto.EndpointHit;
 import ru.practicum.ewm.dto.EndpointHitReturnDto;
 import ru.practicum.ewm.dto.ViewStats;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -23,9 +23,8 @@ import java.util.List;
 public class StatisticClient {
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final WebClient client;
-    @Value("${client.url:http://localhost:9090}")
-    private String url;
-    public StatisticClient() {
+
+    public StatisticClient(@Value("${client.url:http://localhost:9090}") String url) {
         this.client = WebClient.builder()
                 .baseUrl(url)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -36,7 +35,7 @@ public class StatisticClient {
         return client
                 .post()
                 .uri("/hit")
-                .body(endpointHit, EndpointHit.class)
+                .body(Mono.just(endpointHit), EndpointHit.class)
                 .retrieve()
                 .bodyToMono(EndpointHitReturnDto.class)
                 .block();

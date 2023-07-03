@@ -5,8 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.client.StatisticClient;
+import ru.practicum.ewm.dto.EndpointHit;
+import ru.practicum.ewm.dto.ViewStats;
 import ru.practicum.main.category.model.Category;
 import ru.practicum.main.category.storage.CategoryRepository;
 import ru.practicum.main.event.dto.EventFullDto;
@@ -29,6 +32,7 @@ import ru.practicum.main.utils.ValidationHelper;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -159,10 +163,10 @@ public class EventServiceImpl implements EventService {
                                                Integer size,
                                                HttpServletRequest request) {
         if (rangeStart == null) {
-            rangeStart = LocalDateTime.now().minusYears(200);
+            rangeStart = LocalDateTime.now().minusYears(1);
         }
         if (rangeEnd == null) {
-            rangeEnd = LocalDateTime.now().plusYears(200);
+            rangeEnd = LocalDateTime.now().plusYears(1);
         }
         if (rangeStart.isAfter(rangeEnd)) {
             throw new BadRequestException("Start is before end");
@@ -180,6 +184,7 @@ public class EventServiceImpl implements EventService {
         if (onlyAvailable) {
             sortedEvents.removeIf(event -> event.getParticipantLimit().equals(event.getConfirmedRequests()));
         }
+        sortedEvents.forEach(e -> viewEvent(request, e));
         return eventRepository.saveAll(sortedEvents).stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 
@@ -187,8 +192,8 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventPublic(Long eventId, HttpServletRequest request) {
         Event event = eventRepository.getByIdAndCheck(eventId);
         validationHelper.isEventNotPublished(event);
-
-        return EventMapper.toEventFullDto(event);
+        viewEvent(request, event);
+        return EventMapper.toEventFullDto(eventRepository.save(event));
     }
 
     @Override
@@ -220,5 +225,33 @@ public class EventServiceImpl implements EventService {
         Optional.ofNullable(updateEventDto.getParticipantLimit()).ifPresent(event::setParticipantLimit);
         Optional.ofNullable(updateEventDto.getRequestModeration()).ifPresent(event::setRequestModeration);
         Optional.ofNullable(updateEventDto.getTitle()).ifPresent(event::setTitle);
+    }
+
+    private void viewEvent(HttpServletRequest request, Event event) {
+        String uri = request.getRequestURI();
+        sendStatistics(uri, request.getRemoteAddr(), "main");
+        long views = getViewsFromStatistics(uri, event.getCreatedOn(), LocalDateTime.now());
+        if (event.getViews() != views) {
+            event.setViews(views);
+        }
+    }
+
+    private long getViewsFromStatistics(String uri, LocalDateTime from, LocalDateTime to) {
+        return Optional.ofNullable(statisticClient.getStatistic(from, to, List.of(uri), true))
+                .map(ResponseEntity::getBody)
+                .stream()
+                .flatMap(Collection::stream)
+                .filter(v -> v.getUri().equals(uri))
+                .mapToLong(ViewStats::getHits)
+                .sum();
+    }
+
+    private void sendStatistics(String uri, String ip, String app) {
+        EndpointHit hit = new EndpointHit();
+        hit.setIp(ip);
+        hit.setUri(uri);
+        hit.setApp(app);
+        hit.setTimestamp(LocalDateTime.now());
+        statisticClient.createStatistic(hit);
     }
 }

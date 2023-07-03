@@ -17,7 +17,6 @@ import ru.practicum.main.user.model.User;
 import ru.practicum.main.user.storage.UserRepository;
 import ru.practicum.main.utils.ValidationHelper;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
@@ -34,7 +32,6 @@ public class RequestServiceImpl implements RequestService {
 
 
     @Override
-    @Transactional
     public RequestDto createRequest(Long userId, Long eventId) {
         User requester = userRepository.getByIdAndCheck(userId);
         Event event = eventRepository.getByIdAndCheck(eventId);
@@ -67,7 +64,6 @@ public class RequestServiceImpl implements RequestService {
 
 
     @Override
-    @Transactional
     public List<RequestDto> getRequestsByUser(Long userId) {
         userRepository.getByIdAndCheck(userId);
         return requestRepository.getAllByRequesterId(userId)
@@ -77,7 +73,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional
     public RequestUpdateResponseDto updateRequestStatus(Long userId, Long eventId, NewRequestUpdateDto newRequestUpdateDto) {
         User user = userRepository.getByIdAndCheck(userId);
         Event event = eventRepository.getByIdAndCheck(eventId);
@@ -105,7 +100,7 @@ public class RequestServiceImpl implements RequestService {
                         request.setStatus(RequestStatus.REJECTED);
                         responseDto.getRejectedRequests().add(RequestMapper.toRequestDto(request));
                         requestRepository.save(request);
-                        throw new ConflictException("Participant limit is full UPDATE REQUEST");
+                        throw new ConflictException("Participant limit is full");
                     }
             }
         }
@@ -115,7 +110,6 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    @Transactional
     public RequestDto cancelRequest(Long userId, Long requestId) {
         Request request = requestRepository.getByIdAndCheck(requestId);
         User user = userRepository.getByIdAndCheck(userId);
