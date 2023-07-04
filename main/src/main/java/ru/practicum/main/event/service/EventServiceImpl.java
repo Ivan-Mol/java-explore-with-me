@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -162,11 +163,12 @@ public class EventServiceImpl implements EventService {
                                                Integer from,
                                                Integer size,
                                                HttpServletRequest request) {
+        LocalDateTime now = LocalDateTime.now();
         if (rangeStart == null) {
-            rangeStart = LocalDateTime.now().minusYears(1);
+            rangeStart = now.minusYears(1);
         }
         if (rangeEnd == null) {
-            rangeEnd = LocalDateTime.now().plusYears(1);
+            rangeEnd = now.plusYears(1);
         }
         if (rangeStart.isAfter(rangeEnd)) {
             throw new BadRequestException("Start is before end");
@@ -184,7 +186,17 @@ public class EventServiceImpl implements EventService {
         if (onlyAvailable) {
             sortedEvents.removeIf(event -> event.getParticipantLimit().equals(event.getConfirmedRequests()));
         }
-        sortedEvents.forEach(e -> viewEvent(request, e));
+        if (sortedEvents.isEmpty()) {
+            return List.of();
+        }
+        String uri = request.getRequestURI();
+        LocalDateTime startDate = sortedEvents.stream().map(Event::getCreatedOn).min(Comparator.naturalOrder()).orElse(now);
+        long viewsBefore = getViewsFromStatistics(uri, startDate, now);
+        sendStatistics(uri, request.getRemoteAddr(), "main");
+        long viewsAfter = getViewsFromStatistics(uri, startDate, now);
+        if (viewsBefore != viewsAfter) {
+            sortedEvents.forEach(e -> e.setViews(e.getViews() + 1));
+        }
         return eventRepository.saveAll(sortedEvents).stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 
@@ -192,7 +204,12 @@ public class EventServiceImpl implements EventService {
     public EventFullDto getEventPublic(Long eventId, HttpServletRequest request) {
         Event event = eventRepository.getByIdAndCheck(eventId);
         validationHelper.isEventNotPublished(event);
-        viewEvent(request, event);
+        String uri = request.getRequestURI();
+        sendStatistics(uri, request.getRemoteAddr(), "main");
+        long views = getViewsFromStatistics(uri, event.getCreatedOn(), LocalDateTime.now());
+        if (event.getViews() != views) {
+            event.setViews(views);
+        }
         return EventMapper.toEventFullDto(eventRepository.save(event));
     }
 
@@ -225,15 +242,6 @@ public class EventServiceImpl implements EventService {
         Optional.ofNullable(updateEventDto.getParticipantLimit()).ifPresent(event::setParticipantLimit);
         Optional.ofNullable(updateEventDto.getRequestModeration()).ifPresent(event::setRequestModeration);
         Optional.ofNullable(updateEventDto.getTitle()).ifPresent(event::setTitle);
-    }
-
-    private void viewEvent(HttpServletRequest request, Event event) {
-        String uri = request.getRequestURI();
-        sendStatistics(uri, request.getRemoteAddr(), "main");
-        long views = getViewsFromStatistics(uri, event.getCreatedOn(), LocalDateTime.now());
-        if (event.getViews() != views) {
-            event.setViews(views);
-        }
     }
 
     private long getViewsFromStatistics(String uri, LocalDateTime from, LocalDateTime to) {
