@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.dto.EndpointHitDto;
-import ru.practicum.ewm.dto.StatisticDto;
-import ru.practicum.ewm.dto.StatisticReturnDto;
+import ru.practicum.ewm.dto.ViewStats;
+import ru.practicum.ewm.dto.EndpointHit;
+import ru.practicum.ewm.dto.EndpointHitReturnDto;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.Statistic;
 import ru.practicum.ewm.model.StatisticMapper;
@@ -25,15 +25,15 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     @Transactional
-    public StatisticReturnDto createStatistic(StatisticDto statisticDto) {
-        Statistic statistic = StatisticMapper.statisticDtoToStatistic(statisticDto);
-        log.info("POST statisticDto {}", statisticDto);
+    public EndpointHitReturnDto createStatistic(EndpointHit endpointHit) {
+        Statistic statistic = StatisticMapper.statisticDtoToStatistic(endpointHit);
+        log.info("POST statisticDto {}", endpointHit);
         return StatisticMapper.statisticToStatisticDto(repository.save(statistic));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EndpointHitDto> getAllStatistic(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public List<ViewStats> getAllStatistic(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         dateCheck(start, end);
         if (uris.isEmpty()) {
             if (!unique) {

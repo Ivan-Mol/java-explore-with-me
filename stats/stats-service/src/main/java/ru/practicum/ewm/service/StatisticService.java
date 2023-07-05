@@ -1,15 +1,15 @@
 package ru.practicum.ewm.service;
 
-import ru.practicum.ewm.dto.EndpointHitDto;
-import ru.practicum.ewm.dto.StatisticDto;
-import ru.practicum.ewm.dto.StatisticReturnDto;
+import ru.practicum.ewm.dto.ViewStats;
+import ru.practicum.ewm.dto.EndpointHit;
+import ru.practicum.ewm.dto.EndpointHitReturnDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StatisticService {
 
-    StatisticReturnDto createStatistic(StatisticDto statisticDto);
+    EndpointHitReturnDto createStatistic(EndpointHit endpointHit);
 
-    List<EndpointHitDto> getAllStatistic(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
+    List<ViewStats> getAllStatistic(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
 }

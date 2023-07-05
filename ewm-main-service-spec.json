@@ -620,7 +620,7 @@
           {
             "description": "id пользователей",
             "in": "query",
-            "name": "ids",
+            "name": "userIds",
             "required": false,
             "schema": {
               "type": "array",

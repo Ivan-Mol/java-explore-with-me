@@ -35,6 +35,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm
       - SPRING_DATASOURCE_USERNAME=ewm
       - SPRING_DATASOURCE_PASSWORD=ewm
+      - client.url=http://stats-server:9090
   ewm-db:
     image: postgres:14-alpine
     container_name: ewm-db
