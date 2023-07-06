@@ -274,8 +274,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Status code is 400\", function () {\r",
-									"    pm.response.to.have.status(400);\r",
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
 									"});\r",
 									"pm.test(\"error\", function () {\r",
 									"    pm.expect(pm.response.text()).to.include(\"error\");\r",
@@ -1209,9 +1209,9 @@
 									"});\r",
 									"pm.test(\"Comment parameters test\", function () {\r",
 									"    pm.expect(pm.response.text()).to.include(\"Nice! I will try to be there!\");\r",
-									"    pm.expect(pm.response.text()).to.include(\"Nice! I will try to be there!\");\r",
-									"    pm.expect(pm.response.text()).to.include(\"Nice! I will try to be there!\");\r",
-									"    pm.expect(pm.response.text()).to.include(\"Nice! I will try to be there!\");\r",
+									"    pm.expect(pm.response.text()).to.include(\"I am a fish!\");\r",
+									"    pm.expect(pm.response.text()).to.include(\"No, thanks...\");\r",
+									"\r",
 									"});\r",
 									""
 								],
