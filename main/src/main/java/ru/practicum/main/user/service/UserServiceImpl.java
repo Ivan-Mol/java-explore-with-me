@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
         try {
             user = userRepository.save(UserMapper.toUser(newUserRequest));
         } catch (DataIntegrityViolationException e) {
-            throw new ConflictException("This name" + newUserRequest.getName() + " is already used");
+            throw new ConflictException("This name " + newUserRequest.getName() + " is already used");
         }
         log.debug("User with id = {}, created", user.getId());
         return UserMapper.toUserDto(user);

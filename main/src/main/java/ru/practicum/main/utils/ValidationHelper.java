@@ -2,6 +2,9 @@ package ru.practicum.main.utils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.practicum.main.comment.dto.NewCommentDto;
+import ru.practicum.main.comment.model.Comment;
+import ru.practicum.main.comment.storage.CommentRepository;
 import ru.practicum.main.event.dto.NewRequestUpdateDto;
 import ru.practicum.main.event.model.Event;
 import ru.practicum.main.event.model.EventState;
@@ -24,11 +27,12 @@ public class ValidationHelper {
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
     private final EventRepository eventRepository;
+    private final CommentRepository commentRepository;
 
     public void isRequestAlreadyCreated(Long userId, Long eventId) {
         List<Request> requests = requestRepository.getByRequesterIdAndEventId(userId, eventId);
         if (!requests.isEmpty()) {
-            throw new ConflictException("Request for Event=" + eventId + " is already created");
+            throw new ConflictException("Request for event=" + eventId + " is already created");
         }
     }
 
@@ -68,7 +72,7 @@ public class ValidationHelper {
 
     public void isEventDateCorrect(LocalDateTime eventDate, LocalDateTime localDateTime) {
         if (eventDate.minusHours(2).isBefore(localDateTime)) {
-            throw new ValidationException("Date of event is NOT correct");
+            throw new ValidationException("Date of event is not correct");
         }
     }
 
@@ -92,27 +96,32 @@ public class ValidationHelper {
 
     public void isRequestAuthorInitiator(Event event, User user) {
         if (event.getInitiator().equals(user)) {
-            throw new ConflictException("Initiator is a author of request");
-        }
-    }
-
-    public void isRequestStatusValid(NewRequestUpdateDto newRequestUpdateDto, Request request) {
-        if (request.getStatus().equals(RequestStatus.CONFIRMED) &&
-                newRequestUpdateDto.getStatus().equals(RequestStatus.REJECTED)) {
-            throw new ValidationException("Request status is Invalid");
+            throw new ConflictException("Initiator is the author of request");
         }
     }
 
     public void isRequestAlreadyConfirmed(NewRequestUpdateDto newRequestUpdateDto, Request request) {
         if (request.getStatus().equals(RequestStatus.CONFIRMED) &&
                 newRequestUpdateDto.getStatus().equals(RequestStatus.REJECTED)) {
-            throw new ConflictException("Request is Already Confirmed");
+            throw new ConflictException("Request is already Confirmed");
         }
     }
 
     public void isTitleToLong(String title) {
         if (title != null && title.length() > 50) {
             throw new ValidationException("Title is longer than 50");
+        }
+    }
+
+    public void isUserAuthorOfComment(User user, Comment comment) {
+        if (!comment.getAuthor().equals(user)) {
+            throw new ValidationException("User is not comment author");
+        }
+    }
+
+    public void isAuthorAlreadyHaveThisComment(User user, NewCommentDto newCommentDto, Long eventId) {
+        if (commentRepository.getByTextAndAuthorIdAndEventId(newCommentDto.getText(), user.getId(), eventId) != null) {
+            throw new ValidationException("User can not to create the same comment two times for one event");
         }
     }
 }
