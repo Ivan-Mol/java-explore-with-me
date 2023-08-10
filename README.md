@@ -18,17 +18,17 @@ Stack:
 
 Main API
 The main service in which the main functions of applications are implemented
-/users
-/events
-/Requests
-/collections
-/categories
+- /users
+- /events
+- /Requests
+- /collections
+- /categories
 
 Stats API
 The statistics service stores the number of views and offers various samples for analyzing application performance.
-/strike
-/statistics
-/views
+- /strike
+- /statistics
+- /views
 
 ## Database ERD
 
