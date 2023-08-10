@@ -33,7 +33,7 @@ The statistics service stores the number of views and offers various samples for
 /statistics
 /views
 
-##Database ERD
+## Database ERD
 
 <img width="544" alt="db ewm" src="https://github.com/Ivan-Mol/java-explore-with-me/assets/94922468/a6b09809-1209-4ce9-8ff6-218b17f0558f">
 
