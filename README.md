@@ -5,14 +5,14 @@ A two-module microservice application for event detection and search, in which t
 The application consists of a regular service, a main database, service view statistics, and a database for statistics. Each part is lifted in a separate docker container.
 
 Stack:
-Java 17 (Core, Collections, Optional, Stream)
-Spring Boot
-Hibernate
-PostgreSQL
-Maven
-Lombok
-Postman
-Docker
+- Java 17 (Core, Collections, Optional, Stream)
+- Spring Boot
+- Hibernate
+- PostgreSQL
+- Maven
+- Lombok
+- Postman
+- Docker
 
 ## Application structure
 
