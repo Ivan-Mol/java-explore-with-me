@@ -1,8 +1,8 @@
 # java-explore-with-me
 
+
 https://github.com/Ivan-Mol/java-explore-with-me/pull/3
 
-## Description
 A two-module microservice application for event detection and search, in which the functionality depends on the role (public, authorized user or administrator).
 
 The application consists of a regular service, a main database, service view statistics, and a database for statistics. Each part is lifted in a separate docker container.
